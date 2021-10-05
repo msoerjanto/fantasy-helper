@@ -7,55 +7,62 @@ package main
 // 4. "time" - a library for working with date and time.
 import (
 	"fmt"
-	"html/template"
+	"log"
 	"net/http"
-	"time"
-)
 
-//Create a struct that holds information to be displayed in our HTML file
-type Welcome struct {
-	Name string
-	Time string
-}
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/render"
+	"github.com/graphql-go/graphql"
+	"github.com/msoerjanto/fantasy-helper/bballref"
+	"github.com/msoerjanto/fantasy-helper/gql"
+	"github.com/msoerjanto/fantasy-helper/server"
+)
 
 //Go application entrypoint
 func main() {
-	//Instantiate a Welcome struct object and pass in some random information.
-	//We shall get the name of the user as a query parameter from the URL
-	welcome := Welcome{"Anonymous", time.Now().Format(time.Stamp)}
 
-	//We tell Go exactly where we can find our html file. We ask Go to parse the html file (Notice
-	// the relative path). We wrap it in a call to template.Must() which handles any errors and halts if there are fatal errors
+	// Initialize our api and return a pointer to our router for http.ListenAndServe
+	// and a pointer to our db to defer its closing when main() is finished
+	router := initializeAPI()
 
-	templates := template.Must(template.ParseFiles("templates/index.html"))
+	// Listen on port 4000 and if there's an error log it and exit
+	log.Fatal(http.ListenAndServe(":4000", router))
 
-	//Our HTML comes with CSS that go needs to provide when we run the app. Here we tell go to create
-	// a handle that looks in the static directory, go then uses the "/static/" as a url that our
-	//html can refer to when looking for our css and other files.
+}
 
-	http.Handle("/static/", //final url can be anything
-		http.StripPrefix("/static/",
-			http.FileServer(http.Dir("static")))) //Go looks in the relative "static" directory first using http.FileServer(), then matches it to a
-	//url of our choice as shown in http.Handle("/static/"). This url is what we need when referencing our css files
-	//once the server begins. Our html code would therefore be <link rel="stylesheet"  href="/static/stylesheet/...">
-	//It is important to note the url in http.Handle can be whatever we like, so long as we are consistent.
+func initializeAPI() *chi.Mux {
+	// Create a new router
+	router := chi.NewRouter()
 
-	//This method takes in the URL path "/" and a function that takes in a response writer, and a http request.
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	bballrefService := bballref.NewBasketballRefService()
 
-		//Takes the name from the URL query e.g ?name=Martin, will set welcome.Name = Martin.
-		if name := r.FormValue("name"); name != "" {
-			welcome.Name = name
-		}
-		//If errors show an internal server error message
-		//I also pass the welcome struct to the welcome-template.html file.
-		if err := templates.ExecuteTemplate(w, "index.html", welcome); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
+	// Create our root query for graphql
+	rootQuery := gql.NewRoot(bballrefService)
+	// Create a new graphql schema, passing in the the root query
+	sc, err := graphql.NewSchema(
+		graphql.SchemaConfig{Query: rootQuery.Query},
+	)
+	if err != nil {
+		fmt.Println("Error creating schema: ", err)
+	}
 
-	//Start the web server, set the port to listen to 8080. Without a path it assumes localhost
-	//Print any errors from starting the webserver using fmt
-	fmt.Println("Listening")
-	fmt.Println(http.ListenAndServe(":8080", nil))
+	// Create a server struct that holds a pointer to our database as well
+	// as the address of our graphql schema
+	s := server.Server{
+		GqlSchema: &sc,
+	}
+
+	// Add some middleware to our router
+	router.Use(
+		render.SetContentType(render.ContentTypeJSON), // set content-type headers as application/json
+		middleware.Logger,       // log api request calls
+		middleware.StripSlashes, // match paths with a trailing slash, strip it, and continue routing through the mux
+		middleware.Recoverer,    // recover from panics without crashing server
+	)
+
+	// Create the graphql route with a Server method to handle it
+	router.Post("/graphql", s.GraphQL())
+
+	return router
 }
