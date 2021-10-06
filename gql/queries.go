@@ -2,7 +2,7 @@ package gql
 
 import (
 	"github.com/graphql-go/graphql"
-	"github.com/msoerjanto/fantasy-helper/bballref"
+	"github.com/msoerjanto/fantasy-helper/analytics"
 )
 
 // Root holds a pointer to a graphql object
@@ -11,9 +11,9 @@ type Root struct {
 }
 
 // NewRoot returns base query type. This is where we add all the base queries
-func NewRoot(bballRefService bballref.BasketballRefService) *Root {
+func NewRoot(analyticsService analytics.AnalyticsService) *Root {
 	// Create a resolver holding our databse. Resolver can be found in resolvers.go
-	resolver := Resolver{bballrefService: bballRefService}
+	resolver := Resolver{analyticsService: analyticsService}
 
 	// Create a new Root that describes our base query set up. In this
 	// example we have a user query that takes one argument called name

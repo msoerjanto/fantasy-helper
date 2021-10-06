@@ -17,6 +17,7 @@ require (
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/graphql-go/graphql v0.8.0
 	github.com/kennygrant/sanitize v1.2.4 // indirect
+	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/temoto/robotstxt v1.1.2 // indirect

@@ -70,6 +70,37 @@ var PlayerAverage = graphql.NewObject(
 			"points": &graphql.Field{
 				Type: graphql.Float,
 			},
+
+			"astZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"ptZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"rebZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"stlZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"blkZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"fgpZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"ftpZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"toZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"threeZ": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"zscore": &graphql.Field{
+				Type: graphql.Float,
+			},
 		},
 	},
 )

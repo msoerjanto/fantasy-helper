@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/graphql-go/graphql"
+	"github.com/msoerjanto/fantasy-helper/analytics"
 	"github.com/msoerjanto/fantasy-helper/bballref"
 	"github.com/msoerjanto/fantasy-helper/gql"
 	"github.com/msoerjanto/fantasy-helper/server"
@@ -32,13 +33,14 @@ func main() {
 }
 
 func initializeAPI() *chi.Mux {
-	// Create a new router
+	// Create a new routerx
 	router := chi.NewRouter()
 
 	bballrefService := bballref.NewBasketballRefService()
+	analyticsService := analytics.NewAnalyticsService(bballrefService)
 
 	// Create our root query for graphql
-	rootQuery := gql.NewRoot(bballrefService)
+	rootQuery := gql.NewRoot(analyticsService)
 	// Create a new graphql schema, passing in the the root query
 	sc, err := graphql.NewSchema(
 		graphql.SchemaConfig{Query: rootQuery.Query},
