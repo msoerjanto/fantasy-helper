@@ -15,7 +15,8 @@ type Server struct {
 }
 
 type reqBody struct {
-	Query string `json:"query"`
+	Query     string                 `json:"query"`
+	Variables map[string]interface{} `json:"variables"`
 }
 
 // GraphQL returns an http.HandlerFunc for our /graphql endpoint
@@ -35,7 +36,9 @@ func (s *Server) GraphQL() http.HandlerFunc {
 		}
 
 		// Execute graphql query
-		result := gql.ExecuteQuery(rBody.Query, *s.GqlSchema)
+		// construct variables
+		variables := rBody.Variables
+		result := gql.ExecuteQuery(rBody.Query, variables, *s.GqlSchema)
 
 		// render.JSON comes from the chi/render package and handles
 		// marshalling to json, automatically escaping HTML and setting

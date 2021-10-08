@@ -1,10 +1,5 @@
 package main
 
-// We import 4 important libraries
-// 1. “net/http” to access the core go http functionality
-// 2. “fmt” for formatting our text
-// 3. “html/template” a library that allows us to interact with our html file.
-// 4. "time" - a library for working with date and time.
 import (
 	"fmt"
 	"log"
@@ -12,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 	"github.com/graphql-go/graphql"
 	"github.com/msoerjanto/fantasy-helper/analytics"
@@ -57,6 +53,11 @@ func initializeAPI() *chi.Mux {
 
 	// Add some middleware to our router
 	router.Use(
+		cors.Handler(cors.Options{
+			AllowedOrigins: []string{"*"},
+			AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders: []string{"X-Requested-With", "Accept", "Content-Type", "Content-Length", "Accept-Encoding", "Accept-Language", "X-CSRF-Token", "Authorization"},
+		}),
 		render.SetContentType(render.ContentTypeJSON), // set content-type headers as application/json
 		middleware.Logger,       // log api request calls
 		middleware.StripSlashes, // match paths with a trailing slash, strip it, and continue routing through the mux
@@ -67,4 +68,11 @@ func initializeAPI() *chi.Mux {
 	router.Post("/graphql", s.GraphQL())
 
 	return router
+}
+
+func AllowOriginFunc(r *http.Request, origin string) bool {
+	if origin == "http://localhost:3000" {
+		return true
+	}
+	return false
 }
