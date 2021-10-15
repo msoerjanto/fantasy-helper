@@ -18,7 +18,7 @@ var (
 type YahooService interface {
 	GetRedirectURL() string
 	GetYahooToken(code string) *oauth2.Token
-	GetTeamsForLeague(league string, token *oauth2.Token) []Team
+	NewYahooClient(token *oauth2.Token) *Client
 }
 
 type yahooService struct {
@@ -32,17 +32,7 @@ func (s *yahooService) GetRedirectURL() string {
 	return conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
 }
 
-func (s *yahooService) GetTeamsForLeague(league string, token *oauth2.Token) []Team {
-	client := newYahooClient(token)
-	teams, err := client.GetAllTeams(league)
-	if err != nil {
-		fmt.Println("Error fetching teams from Yahoo")
-		return nil
-	}
-	return teams
-}
-
-func newYahooClient(token *oauth2.Token) *Client {
+func (s *yahooService) NewYahooClient(token *oauth2.Token) *Client {
 
 	// // Use the authorization code that is pushed to the redirect
 	// // URL. Exchange will do the handshake to retrieve the

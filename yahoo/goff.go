@@ -527,7 +527,7 @@ func (c *Client) GetPlayersStats(leagueKey string, week int, players []Player) (
 	return content.League.Players, nil
 }
 
-// GetTeamRoster returns a team's roster for the given week.
+// GetTeamRoster returns a team's roster
 func (c *Client) GetTeamRoster(teamKey string) ([]Player, error) {
 	content, err := c.GetFantasyContent(
 		fmt.Sprintf("%s/team/%s/roster",

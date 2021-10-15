@@ -133,6 +133,17 @@ var Aggregates = graphql.NewObject(
 	},
 )
 
+var LeagueDataResponse = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "LeagueData",
+		Fields: graphql.Fields{
+			"teams": &graphql.Field{
+				Type: graphql.NewList(Team),
+			},
+		},
+	},
+)
+
 var Manager = graphql.NewObject(
 	graphql.ObjectConfig{
 		Name: "Manager",
@@ -160,34 +171,8 @@ var Team = graphql.NewObject(
 			"managers": &graphql.Field{
 				Type: graphql.NewList(Manager),
 			},
-			"isOwnedByCurrentLogin": &graphql.Field{
-				Type: graphql.Boolean,
-			},
 			"players": &graphql.Field{
-				Type: graphql.NewList(Player),
-			},
-		},
-	},
-)
-
-var Player = graphql.NewObject(
-	graphql.ObjectConfig{
-		Name: "Player",
-		Fields: graphql.Fields{
-			"playerKey": &graphql.Field{
-				Type: graphql.String,
-			},
-			"playerId": &graphql.Field{
-				Type: graphql.Float,
-			},
-			"name": &graphql.Field{
-				Type: graphql.String,
-			},
-			"displayPosition": &graphql.Field{
-				Type: graphql.String,
-			},
-			"eligiblePositions": &graphql.Field{
-				Type: graphql.NewList(graphql.String),
+				Type: graphql.NewList(PlayerAverage),
 			},
 		},
 	},

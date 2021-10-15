@@ -34,11 +34,11 @@ func initializeAPI() *chi.Mux {
 	router := chi.NewRouter()
 
 	bballrefService := bballref.NewBasketballRefService()
-	analyticsService := analytics.NewAnalyticsService(bballrefService)
 	yahooService := yahoo.NewService()
+	analyticsService := analytics.NewAnalyticsService(bballrefService, yahooService)
 
 	// Create our root query for graphql
-	rootQuery := gql.NewRoot(analyticsService, yahooService)
+	rootQuery := gql.NewRoot(analyticsService)
 	// Create a new graphql schema, passing in the the root query
 	sc, err := graphql.NewSchema(
 		graphql.SchemaConfig{Query: rootQuery.Query},

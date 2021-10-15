@@ -3,14 +3,12 @@ package gql
 import (
 	"github.com/graphql-go/graphql"
 	"github.com/msoerjanto/fantasy-helper/analytics"
-	"github.com/msoerjanto/fantasy-helper/yahoo"
 	"golang.org/x/oauth2"
 )
 
 // Resolver struct holds a connection to our database
 type Resolver struct {
 	analyticsService analytics.AnalyticsService
-	yahooService     yahoo.YahooService
 }
 
 func convertToken(token map[string]interface{}) *oauth2.Token {
@@ -98,13 +96,13 @@ func (r *Resolver) PlayerAverageResolver(p graphql.ResolveParams) (interface{}, 
 	return nil, nil
 }
 
-func (r *Resolver) TeamsResolver(p graphql.ResolveParams) (interface{}, error) {
+func (r *Resolver) LeagueDataResolver(p graphql.ResolveParams) (interface{}, error) {
 	token, tOk := p.Args["token"].(map[string]interface{})
 	league, lOk := p.Args["league"].(string)
 	if tOk && lOk {
 		oauth2Token := convertToken(token)
-		teams := r.yahooService.GetTeamsForLeague(league, oauth2Token)
-		return teams, nil
+		leagueData := r.analyticsService.GetLeagueData(league, oauth2Token)
+		return leagueData, nil
 	}
 	return nil, nil
 }

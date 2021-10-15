@@ -3,7 +3,6 @@ package gql
 import (
 	"github.com/graphql-go/graphql"
 	"github.com/msoerjanto/fantasy-helper/analytics"
-	"github.com/msoerjanto/fantasy-helper/yahoo"
 )
 
 // Root holds a pointer to a graphql object
@@ -67,10 +66,9 @@ var puntArg = graphql.NewInputObject(
 )
 
 // NewRoot returns base query type. This is where we add all the base queries
-func NewRoot(analyticsService analytics.AnalyticsService,
-	yahooService yahoo.YahooService) *Root {
+func NewRoot(analyticsService analytics.AnalyticsService) *Root {
 	// Create a resolver holding our databse. Resolver can be found in resolvers.go
-	resolver := Resolver{analyticsService: analyticsService, yahooService: yahooService}
+	resolver := Resolver{analyticsService: analyticsService}
 
 	// arguments to the query
 	dataTableArgs := graphql.FieldConfigArgument{
@@ -116,10 +114,10 @@ func NewRoot(analyticsService analytics.AnalyticsService,
 						Args:    dataTableArgs,
 						Resolve: resolver.PlayerAverageResolver,
 					},
-					"teams": &graphql.Field{
-						Type:    graphql.NewList(Team),
+					"leagueData": &graphql.Field{
+						Type:    LeagueDataResponse,
 						Args:    teamsArgs,
-						Resolve: resolver.TeamsResolver,
+						Resolve: resolver.LeagueDataResolver,
 					},
 				},
 			},

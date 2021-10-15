@@ -1,10 +1,13 @@
 package analytics
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/montanaflynn/stats"
 	"github.com/msoerjanto/fantasy-helper/bballref"
+	"github.com/msoerjanto/fantasy-helper/yahoo"
+	"golang.org/x/oauth2"
 )
 
 type DataTableResponse struct {
@@ -28,15 +31,69 @@ type Manager struct {
 
 type AnalyticsService interface {
 	GetPlayerAveragesBySeason(season int, punt PuntCategories, numConsidered int) DataTableResponse
+	GetLeagueData(league string, token *oauth2.Token) LeagueDataResponse
 }
 
 type analyticsService struct {
 	bballrefService bballref.BasketballRefService
+	yahooService    yahoo.YahooService
 }
 
-func NewAnalyticsService(bballrefService bballref.BasketballRefService) AnalyticsService {
+func NewAnalyticsService(bballrefService bballref.BasketballRefService,
+	yahooService yahoo.YahooService) AnalyticsService {
 	return &analyticsService{
 		bballrefService: bballrefService,
+		yahooService:    yahooService,
+	}
+}
+
+func (s *analyticsService) GetLeagueData(league string, token *oauth2.Token) LeagueDataResponse {
+	client := s.yahooService.NewYahooClient(token)
+
+	var result LeagueDataResponse
+
+	// get teams from league
+	teams, err := client.GetAllTeams(league)
+	if err != nil {
+		fmt.Println("Error fetching teams from Yahoo")
+		return LeagueDataResponse{}
+	}
+
+	var resultTeams []Team
+	// get team rosters for each team
+	for i := 0; i < len(teams); i++ {
+		currTeam := Team{}
+
+		currTeam.Manager = convertManagerToManager(teams[i].Managers[0])
+
+		teamKey := teams[i].TeamKey
+		roster, err := client.GetTeamRoster(teamKey)
+		if err != nil {
+			fmt.Println("Error fetching roster from Yahoo")
+		}
+
+		var currTeamPlayers []PlayerAverages
+		for j := 0; j < len(roster); j++ {
+			currTeamPlayers = append(currTeamPlayers, convertPlayerToPlayerAverages(roster[j]))
+		}
+		currTeam.Players = currTeamPlayers
+		resultTeams = append(resultTeams, currTeam)
+	}
+	result.Teams = resultTeams
+	return result
+
+}
+
+func convertManagerToManager(manager yahoo.Manager) Manager {
+	return Manager{
+		Nickname:       manager.Nickname,
+		IsCurrentLogin: manager.IsCurrentLogin,
+	}
+}
+
+func convertPlayerToPlayerAverages(player yahoo.Player) PlayerAverages {
+	return PlayerAverages{
+		Name: player.Name.Full,
 	}
 }
 
