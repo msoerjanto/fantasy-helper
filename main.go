@@ -14,6 +14,7 @@ import (
 	"github.com/msoerjanto/fantasy-helper/bballref"
 	"github.com/msoerjanto/fantasy-helper/gql"
 	"github.com/msoerjanto/fantasy-helper/server"
+	"github.com/msoerjanto/fantasy-helper/yahoo"
 )
 
 //Go application entrypoint
@@ -34,9 +35,10 @@ func initializeAPI() *chi.Mux {
 
 	bballrefService := bballref.NewBasketballRefService()
 	analyticsService := analytics.NewAnalyticsService(bballrefService)
+	yahooService := yahoo.NewService()
 
 	// Create our root query for graphql
-	rootQuery := gql.NewRoot(analyticsService)
+	rootQuery := gql.NewRoot(analyticsService, yahooService)
 	// Create a new graphql schema, passing in the the root query
 	sc, err := graphql.NewSchema(
 		graphql.SchemaConfig{Query: rootQuery.Query},
@@ -66,6 +68,8 @@ func initializeAPI() *chi.Mux {
 
 	// Create the graphql route with a Server method to handle it
 	router.Post("/graphql", s.GraphQL())
+	router.Get("/auth", yahoo.AuthorizeYahooHandler(yahooService))
+	router.Post("/oauth2", yahoo.GetTokenHandler(yahooService))
 
 	return router
 }

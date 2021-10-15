@@ -104,3 +104,91 @@ var PlayerAverage = graphql.NewObject(
 		},
 	},
 )
+
+var DataTableResponse = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "DataTableResponse",
+		Fields: graphql.Fields{
+			"playerAverages": &graphql.Field{
+				Type: graphql.NewList(PlayerAverage),
+			},
+			"aggregates": &graphql.Field{
+				Type: Aggregates,
+			},
+		},
+	},
+)
+
+var Aggregates = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "Aggregates",
+		Fields: graphql.Fields{
+			"averages": &graphql.Field{
+				Type: PlayerAverage,
+			},
+			"standardDeviations": &graphql.Field{
+				Type: PlayerAverage,
+			},
+		},
+	},
+)
+
+var Manager = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "Manager",
+		Fields: graphql.Fields{
+			"managerId": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"nickname": &graphql.Field{
+				Type: graphql.String,
+			},
+			"guid": &graphql.Field{
+				Type: graphql.String,
+			},
+			"isCurrentLogin": &graphql.Field{
+				Type: graphql.Boolean,
+			},
+		},
+	},
+)
+
+var Team = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "Team",
+		Fields: graphql.Fields{
+			"managers": &graphql.Field{
+				Type: graphql.NewList(Manager),
+			},
+			"isOwnedByCurrentLogin": &graphql.Field{
+				Type: graphql.Boolean,
+			},
+			"players": &graphql.Field{
+				Type: graphql.NewList(Player),
+			},
+		},
+	},
+)
+
+var Player = graphql.NewObject(
+	graphql.ObjectConfig{
+		Name: "Player",
+		Fields: graphql.Fields{
+			"playerKey": &graphql.Field{
+				Type: graphql.String,
+			},
+			"playerId": &graphql.Field{
+				Type: graphql.Float,
+			},
+			"name": &graphql.Field{
+				Type: graphql.String,
+			},
+			"displayPosition": &graphql.Field{
+				Type: graphql.String,
+			},
+			"eligiblePositions": &graphql.Field{
+				Type: graphql.NewList(graphql.String),
+			},
+		},
+	},
+)

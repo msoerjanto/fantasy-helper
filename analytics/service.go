@@ -7,35 +7,27 @@ import (
 	"github.com/msoerjanto/fantasy-helper/bballref"
 )
 
-type AggregateData struct {
-	Age            []float64
-	GamesPlayed    []float64
-	GamesStarted   []float64
-	MinutesPerGame []float64
-	PersonalFouls  []float64
+type DataTableResponse struct {
+	PlayerAverages []PlayerAverages
+	Aggregates     AggregateData
+}
 
-	FGMade      []float64
-	FGAttempted []float64
-	FTMade      []float64
-	FTAttempted []float64
+type LeagueDataResponse struct {
+	Teams []Team
+}
 
-	FGPercentage  []float64
-	FTPercentage  []float64
-	ThreePTMade   []float64
-	TotalRebounds []float64
-	Assists       []float64
-	Steals        []float64
-	Blocks        []float64
-	Turnovers     []float64
-	Points        []float64
+type Team struct {
+	Manager Manager
+	Players []PlayerAverages
+}
 
-	Totals      PlayerAverages
-	Averages    PlayerAverages
-	StandardDev bballref.PlayerAverages
+type Manager struct {
+	Nickname       string
+	IsCurrentLogin bool
 }
 
 type AnalyticsService interface {
-	GetPlayerAveragesBySeason(season int, punt PuntCategories, numConsidered int) []PlayerAverages
+	GetPlayerAveragesBySeason(season int, punt PuntCategories, numConsidered int) DataTableResponse
 }
 
 type analyticsService struct {
@@ -48,7 +40,7 @@ func NewAnalyticsService(bballrefService bballref.BasketballRefService) Analytic
 	}
 }
 
-func (s *analyticsService) GetPlayerAveragesBySeason(season int, punt PuntCategories, numConsidered int) []PlayerAverages {
+func (s *analyticsService) GetPlayerAveragesBySeason(season int, punt PuntCategories, numConsidered int) DataTableResponse {
 	playerData := s.bballrefService.ParseData(season)
 
 	aggData, result := InitializeData(playerData, numConsidered)
@@ -57,7 +49,10 @@ func (s *analyticsService) GetPlayerAveragesBySeason(season int, punt PuntCatego
 	sort.Slice(result, func(i, j int) bool {
 		return result[j].ZScore < result[i].ZScore
 	})
-	return result
+	return DataTableResponse{
+		PlayerAverages: result,
+		Aggregates:     aggData,
+	}
 }
 
 func InitializeData(playerData []bballref.PlayerAverages, numConsidered int) (AggregateData, []PlayerAverages) {
@@ -73,7 +68,7 @@ func InitializeData(playerData []bballref.PlayerAverages, numConsidered int) (Ag
 		return result[j].FantasyPts < result[i].FantasyPts
 	})
 
-	if numConsidered != -1 {
+	if numConsidered != -1 && numConsidered < len(result) {
 		result = result[:numConsidered]
 	}
 
@@ -136,32 +131,32 @@ func computeAverages(aggData *AggregateData) {
 }
 
 func computeStandardDeviations(aggData *AggregateData) {
-	aggData.StandardDev.Points, _ = stats.StandardDeviation(aggData.Points)
-	aggData.StandardDev.TotalRebounds, _ = stats.StandardDeviation(aggData.TotalRebounds)
-	aggData.StandardDev.Assists, _ = stats.StandardDeviation(aggData.Assists)
-	aggData.StandardDev.Steals, _ = stats.StandardDeviation(aggData.Steals)
-	aggData.StandardDev.Blocks, _ = stats.StandardDeviation(aggData.Blocks)
-	aggData.StandardDev.ThreePTMade, _ = stats.StandardDeviation(aggData.ThreePTMade)
-	aggData.StandardDev.Turnovers, _ = stats.StandardDeviation(aggData.Turnovers)
+	aggData.StandardDeviations.Points, _ = stats.StandardDeviation(aggData.Points)
+	aggData.StandardDeviations.TotalRebounds, _ = stats.StandardDeviation(aggData.TotalRebounds)
+	aggData.StandardDeviations.Assists, _ = stats.StandardDeviation(aggData.Assists)
+	aggData.StandardDeviations.Steals, _ = stats.StandardDeviation(aggData.Steals)
+	aggData.StandardDeviations.Blocks, _ = stats.StandardDeviation(aggData.Blocks)
+	aggData.StandardDeviations.ThreePTMade, _ = stats.StandardDeviation(aggData.ThreePTMade)
+	aggData.StandardDeviations.Turnovers, _ = stats.StandardDeviation(aggData.Turnovers)
 
-	aggData.StandardDev.FGPercentage, _ = stats.StandardDeviation(aggData.FGPercentage)
-	aggData.StandardDev.FTPercentage, _ = stats.StandardDeviation(aggData.FTPercentage)
+	aggData.StandardDeviations.FGPercentage, _ = stats.StandardDeviation(aggData.FGPercentage)
+	aggData.StandardDeviations.FTPercentage, _ = stats.StandardDeviation(aggData.FTPercentage)
 }
 
 func computeZScores(aggData *AggregateData, playerData []PlayerAverages, punt PuntCategories) {
 	for i := 0; i < len(playerData); i++ {
-		playerData[i].PtZ = computeZScoreBasic(playerData[i].Points, aggData.Averages.Points, aggData.StandardDev.Points, false)
-		playerData[i].AstZ = computeZScoreBasic(playerData[i].Assists, aggData.Averages.Assists, aggData.StandardDev.Assists, false)
-		playerData[i].RebZ = computeZScoreBasic(playerData[i].TotalRebounds, aggData.Averages.TotalRebounds, aggData.StandardDev.TotalRebounds, false)
-		playerData[i].StlZ = computeZScoreBasic(playerData[i].Steals, aggData.Averages.Steals, aggData.StandardDev.Steals, false)
-		playerData[i].BlkZ = computeZScoreBasic(playerData[i].Blocks, aggData.Averages.Blocks, aggData.StandardDev.Blocks, false)
-		playerData[i].ThreeZ = computeZScoreBasic(playerData[i].ThreePTMade, aggData.Averages.ThreePTMade, aggData.StandardDev.ThreePTMade, false)
-		playerData[i].ToZ = computeZScoreBasic(playerData[i].Turnovers, aggData.Averages.Turnovers, aggData.StandardDev.Turnovers, true)
+		playerData[i].PtZ = computeZScoreBasic(playerData[i].Points, aggData.Averages.Points, aggData.StandardDeviations.Points, false)
+		playerData[i].AstZ = computeZScoreBasic(playerData[i].Assists, aggData.Averages.Assists, aggData.StandardDeviations.Assists, false)
+		playerData[i].RebZ = computeZScoreBasic(playerData[i].TotalRebounds, aggData.Averages.TotalRebounds, aggData.StandardDeviations.TotalRebounds, false)
+		playerData[i].StlZ = computeZScoreBasic(playerData[i].Steals, aggData.Averages.Steals, aggData.StandardDeviations.Steals, false)
+		playerData[i].BlkZ = computeZScoreBasic(playerData[i].Blocks, aggData.Averages.Blocks, aggData.StandardDeviations.Blocks, false)
+		playerData[i].ThreeZ = computeZScoreBasic(playerData[i].ThreePTMade, aggData.Averages.ThreePTMade, aggData.StandardDeviations.ThreePTMade, false)
+		playerData[i].ToZ = computeZScoreBasic(playerData[i].Turnovers, aggData.Averages.Turnovers, aggData.StandardDeviations.Turnovers, true)
 
 		playerData[i].FgpZ = computeZScoreComplex(playerData[i].FGMade, playerData[i].FGAttempted,
-			aggData.Averages.FGPercentage, aggData.StandardDev.FGPercentage, aggData.Averages.FGAttempted)
+			aggData.Averages.FGPercentage, aggData.StandardDeviations.FGPercentage, aggData.Averages.FGAttempted)
 		playerData[i].FtpZ = computeZScoreComplex(playerData[i].FTMade, playerData[i].FTAttempted,
-			aggData.Averages.FTPercentage, aggData.StandardDev.FTPercentage, aggData.Averages.FTAttempted)
+			aggData.Averages.FTPercentage, aggData.StandardDeviations.FTPercentage, aggData.Averages.FTAttempted)
 
 		zscoreSum := getZscoreSum(playerData[i], punt)
 		numCategories := getNumCategories(punt)
