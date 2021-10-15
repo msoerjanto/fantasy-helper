@@ -7,8 +7,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const clientId = "dj0yJmk9bDVWQk5xOUx1amxEJmQ9WVdrOU5uaEdkWHA1TXpVbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PWM3"
-const clientSecret = "2dded73ccc7fc70daf34145ad2131108a2f23471"
+const clientId = "clientid"
+const clientSecret = "clientsecret"
 const redirectURL = "https://localhost:3000"
 
 var (
